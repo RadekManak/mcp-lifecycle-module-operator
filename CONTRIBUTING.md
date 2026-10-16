@@ -100,14 +100,16 @@ make test
 
 ### E2E tests
 
-Set `KUBECONFIG` to your test cluster. Deploy the module operator and prepare a Managed `MCPLifecycleOperator/default` before running tests. The Kind workflow above includes the sample CR. On RHOAI, enable the MCP component through DSC and use your applications namespace below.
+Set `KUBECONFIG` to your test cluster. Deploy the module operator and prepare a Managed `MCPLifecycleOperator/default` before running tests. The Kind workflow above includes the sample CR. On RHOAI, enable the MCP component through DSC before running the suite.
+
+The suite discovers the installation namespace from the module operator Deployment labels. Set `SYSTEM_NAMESPACE` to select a namespace explicitly when needed, such as when multiple installations exist. Discovery fails if no installation is found, multiple installations match, or the API request fails.
 
 ```bash
 # Kind: run all checks.
-SYSTEM_NAMESPACE=mcp-lifecycle-module-operator-system make e2e-test
+make e2e-test
 
 # RHOAI: run all compatible checks.
-SYSTEM_NAMESPACE=redhat-ods-applications make e2e-test E2E_TEST_ARGS='-ginkgo.label-filter=!standalone'
+make e2e-test E2E_TEST_ARGS='-ginkgo.label-filter=!standalone'
 ```
 
 Labels:
@@ -118,6 +120,8 @@ Labels:
 Unlabeled checks leave the singleton unchanged. Use one Ginkgo process. The suite leaves the installation running after tests.
 
 Install optional Gateway test prerequisites with `make deploy-gateway-crds`. Pass Ginkgo options through `E2E_TEST_ARGS`, such as `-ginkgo.v` or `-ginkgo.junit-report=/tmp/mcplmo-junit.xml`.
+
+The suite timeout defaults to 15 minutes. Override it with `E2E_TEST_TIMEOUT`, for example `make e2e-test E2E_TEST_TIMEOUT=30m`. Individual polling waits have a fixed 5-minute timeout.
 
 ## CI
 

@@ -4,7 +4,7 @@ IMAGE_TAG ?= odh-stable
 IMG ?= $(IMAGE_REGISTRY)/$(IMAGE_NAME):$(IMAGE_TAG)
 PLATFORM ?= linux/amd64
 E2E_TEST_ARGS ?=
-E2E_TEST_TIMEOUT ?= 90m
+E2E_TEST_TIMEOUT ?= 15m
 CGO_ENABLED ?= 1
 COMMON_BUILD_ARGS += -trimpath -ldflags="-s -w"
 OUTPUT ?= ./bin/manager
@@ -91,7 +91,7 @@ GATEWAY_API_VERSION ?= v1.6.2
 MCP_GATEWAY_VERSION ?= v1.0.1
 
 .PHONY: e2e-test
-e2e-test: ## Run E2E tests (requires SYSTEM_NAMESPACE and a prepared Managed installation).
+e2e-test: ## Run E2E tests (requires a prepared Managed installation).
 	go test -count=1 ./test/e2e/ -v -timeout $(E2E_TEST_TIMEOUT) -args $(E2E_TEST_ARGS)
 
 .PHONY: deploy-gateway-crds

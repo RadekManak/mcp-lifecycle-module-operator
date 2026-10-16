@@ -51,27 +51,16 @@ const (
 	operandCRD               = "mcpservers.mcp.x-k8s.io"
 	moduleOperatorDeployment = "mcp-lifecycle-module-operator-controller-manager"
 
+	timeout            = 5 * time.Minute
 	interval           = 5 * time.Second
 	consistentDuration = 30 * time.Second
 	consistentInterval = 5 * time.Second
 )
 
 var operandNamespace string
-var timeout = 10 * time.Minute
 
 func TestE2E(t *testing.T) {
 	RegisterFailHandler(Fail)
-	operandNamespace = os.Getenv("SYSTEM_NAMESPACE")
-	if operandNamespace == "" {
-		t.Fatal("SYSTEM_NAMESPACE must identify the prepared module and operand installation")
-	}
-	if value := os.Getenv("E2E_TIMEOUT"); value != "" {
-		duration, err := time.ParseDuration(value)
-		if err != nil || duration <= 0 {
-			t.Fatalf("E2E_TIMEOUT must be a positive duration, got %q", value)
-		}
-		timeout = duration
-	}
 	RunSpecs(t, "MCPLMO E2E Suite")
 }
 
@@ -99,6 +88,11 @@ var _ = BeforeSuite(func() {
 	k8sClient, err = client.New(cfg, client.Options{Scheme: scheme})
 	Expect(err).NotTo(HaveOccurred())
 	ctx := context.Background()
+	By("Discovering the prepared module installation namespace")
+	operandNamespace, err = discoverSystemNamespace(ctx, k8sClient, os.Getenv("SYSTEM_NAMESPACE"))
+	Expect(err).NotTo(HaveOccurred())
+	GinkgoWriter.Printf("Using system namespace %q\n", operandNamespace)
+
 	By("Checking the prepared module installation and Managed singleton")
 	Expect(k8sClient.Get(ctx, types.NamespacedName{Namespace: operandNamespace, Name: moduleOperatorDeployment}, &appsv1.Deployment{})).To(Succeed())
 	cr := &v1alpha1.MCPLifecycleOperator{}

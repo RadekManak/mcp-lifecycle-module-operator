@@ -25,6 +25,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	k8serr "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/util/retry"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -76,7 +77,18 @@ var _ = Describe("MCPLifecycleOperator lifecycle", func() {
 		}, consistentDuration, consistentInterval).Should(Succeed())
 	})
 
-	It("acknowledges Removed generation and preserves the namespace and module operator", Label("lifecycle"), func() {
+	It("acknowledges Removed generation and preserves the MCPServer through reinstallation", Label("lifecycle"), func() {
+		By("Creating an MCPServer whose identity and spec must survive reinstallation")
+		fixtureNamespace := createTestNamespace(ctx, "mcplmo-e2e-retention-")
+		server := newMCPServer(fixtureNamespace, "retained", nil)
+		server.SetAPIVersion("mcp.x-k8s.io/v1beta1")
+		Expect(unstructured.SetNestedField(server.Object, int64(0), "spec", "runtime", "replicas")).To(Succeed())
+		Eventually(func(g Gomega) {
+			err := k8sClient.Create(ctx, server.DeepCopy())
+			g.Expect(err == nil || k8serr.IsAlreadyExists(err)).To(BeTrue(), "create retention fixture: %v", err)
+		}, timeout, interval).Should(Succeed())
+		Expect(k8sClient.Get(ctx, client.ObjectKeyFromObject(server), server)).To(Succeed())
+
 		By("Recording the current singleton identity and generation")
 		cr := &v1alpha1.MCPLifecycleOperator{}
 		Expect(k8sClient.Get(ctx, types.NamespacedName{Name: "default"}, cr)).To(Succeed())
@@ -124,6 +136,17 @@ var _ = Describe("MCPLifecycleOperator lifecycle", func() {
 			g.Expect(k8serr.IsNotFound(err)).To(BeTrue())
 			assertModuleInstallationRemains(g, ctx)
 		}, consistentDuration, consistentInterval).Should(Succeed())
+
+		By("Reinstalling the operand and verifying the original MCPServer and its spec remain")
+		restoreManagedSingleton(ctx, uid)
+		Eventually(func(g Gomega) {
+			retained := &unstructured.Unstructured{}
+			retained.SetGroupVersionKind(server.GroupVersionKind())
+			g.Expect(k8sClient.Get(ctx, client.ObjectKeyFromObject(server), retained)).To(Succeed())
+			g.Expect(retained.GetUID()).To(Equal(server.GetUID()))
+			g.Expect(retained.GetDeletionTimestamp()).To(BeNil())
+			g.Expect(retained.Object["spec"]).To(Equal(server.Object["spec"]))
+		}, timeout, interval).Should(Succeed())
 	})
 
 	It("reports Ready=False during an operand outage and recovers", Label("lifecycle"), func() {
@@ -178,10 +201,6 @@ var _ = Describe("MCPLifecycleOperator lifecycle", func() {
 				),
 			))
 		}, timeout, interval).Should(Succeed())
-
-		By("Deleting the patched Pod so the ReplicaSet creates a healthy replacement")
-		Expect(k8sClient.Delete(ctx, pod, client.Preconditions{UID: &uid})).To(Succeed())
-		waitForOperandReady(ctx)
 	})
 })
 

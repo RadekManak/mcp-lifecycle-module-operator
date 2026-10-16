@@ -45,7 +45,7 @@ var _ = Describe("MCPLifecycleOperator installation", func() {
 
 	BeforeEach(prepareTest)
 
-	It("installs the operand webhook Service and fail-closed admission registration", func() {
+	It("installs a reachable operand webhook with fail-closed admission registration", func() {
 		const serviceName = "mcp-lifecycle-operator-webhook-service"
 		By("Checking the webhook Service and fail-closed admission registration")
 		Eventually(func(g Gomega) {
@@ -80,6 +80,12 @@ var _ = Describe("MCPLifecycleOperator installation", func() {
 				HaveField("Resources", ContainElement("mcpservers")),
 				HaveField("Scope", Or(BeNil(), HaveValue(BeElementOf(admissionv1.AllScopes, admissionv1.NamespacedScope)))),
 			)))
+		}, timeout, interval).Should(Succeed())
+
+		By("Sending a dry-run MCPServer create request through admission")
+		server := newMCPServer(operandNamespace, "mcplmo-e2e-webhook", nil)
+		Eventually(func(g Gomega) {
+			g.Expect(k8sClient.Create(ctx, server.DeepCopy(), client.DryRunAll)).To(Succeed())
 		}, timeout, interval).Should(Succeed())
 	})
 
