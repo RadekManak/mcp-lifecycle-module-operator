@@ -145,7 +145,17 @@ var _ = Describe("MCPLifecycleOperator lifecycle", func() {
 			g.Expect(k8sClient.Get(ctx, client.ObjectKeyFromObject(server), retained)).To(Succeed())
 			g.Expect(retained.GetUID()).To(Equal(server.GetUID()))
 			g.Expect(retained.GetDeletionTimestamp()).To(BeNil())
-			g.Expect(retained.Object["spec"]).To(Equal(server.Object["spec"]))
+			expectMCPServerSpec(g, retained, serverPortValue)
+
+			image, found, err := unstructured.NestedString(retained.Object, "spec", "source", "containerImage", "ref")
+			g.Expect(err).NotTo(HaveOccurred())
+			g.Expect(found).To(BeTrue())
+			g.Expect(image).To(Equal("quay.io/containers/kubernetes_mcp_server:latest"))
+
+			replicas, found, err := unstructured.NestedInt64(retained.Object, "spec", "runtime", "replicas")
+			g.Expect(err).NotTo(HaveOccurred())
+			g.Expect(found).To(BeTrue())
+			g.Expect(replicas).To(Equal(int64(0)))
 		}, timeout, interval).Should(Succeed())
 	})
 

@@ -77,7 +77,7 @@ test: manifests generate fmt vet ## Run unit tests with coverage.
 
 .PHONY: unit-test
 unit-test: ## Run unit tests (no codegen prerequisites).
-	go test ./internal/... ./cmd/...
+	go test ./api/... ./internal/... ./cmd/...
 
 .PHONY: kind-create
 kind-create: ## Create a Kind cluster with a local registry.
