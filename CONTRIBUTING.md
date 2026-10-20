@@ -105,17 +105,16 @@ Set `KUBECONFIG` to your test cluster. Deploy the module operator and prepare a 
 The suite discovers the installation namespace from the module operator Deployment labels. Set `SYSTEM_NAMESPACE` to select a namespace explicitly when needed, such as when multiple installations exist. Discovery fails if no installation is found, multiple installations match, or the API request fails.
 
 ```bash
-# Kind: run all checks.
+# Run all checks compatible with the prepared installation.
 make e2e-test
-
-# RHOAI: run all compatible checks.
-make e2e-test E2E_TEST_ARGS='-ginkgo.label-filter=!standalone'
 ```
+
+The suite automatically skips standalone tests when the singleton has an owner reference, as it does on RHOAI and ODH. An unowned singleton runs the full suite. No label filter is required.
 
 Labels:
 
 - `lifecycle`: changes the singleton's management state, disrupts the operand Pod, or deletes the singleton. Requires a disposable installation and exclusive access to the component. Each test restores readiness during cleanup.
-- `standalone`: deletes the singleton and checks operand garbage collection. Requires an installation without a parent controller that recreates the singleton. Exclude this label on RHOAI.
+- `standalone`: deletes the singleton and checks operand garbage collection. Automatically skipped when the singleton has a parent owner.
 
 Unlabeled checks leave the singleton unchanged. Use one Ginkgo process. The suite leaves the installation running after tests.
 
