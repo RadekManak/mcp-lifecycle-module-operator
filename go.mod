@@ -1,17 +1,17 @@
 module github.com/opendatahub-io/mcp-lifecycle-module-operator
 
-go 1.26.3
+go 1.26.10
 
 require (
 	github.com/go-logr/logr v1.4.4
 	github.com/kubernetes-sigs/mcp-lifecycle-operator v0.0.0
 	github.com/manifestival/manifestival v0.7.2
 	github.com/onsi/gomega v1.44.0
-	github.com/opendatahub-io/odh-platform-utilities v0.5.0
-	github.com/openshift/api v0.0.0-20261015135644-e07c1fd9d99c
-	github.com/openshift/controller-runtime-common v0.0.0-20261008111711-8ec0dc844066
-	github.com/openshift/library-go v0.0.0-20261015064245-e69210d7ecee
-	golang.org/x/mod v0.41.0
+	github.com/opendatahub-io/odh-platform-utilities v0.6.0
+	github.com/openshift/api v0.0.0-20261029222750-c757da50cb18
+	github.com/openshift/controller-runtime-common v0.0.0-20261026124434-bdfc411d93cd
+	github.com/openshift/library-go v0.0.0-20261028054900-dbcad7febe41
+	golang.org/x/mod v0.42.0
 	k8s.io/api v0.37.2
 	k8s.io/apiextensions-apiserver v0.37.2
 	k8s.io/apimachinery v0.37.2
@@ -32,7 +32,7 @@ require (
 	github.com/evanphx/json-patch/v5 v5.9.11 // indirect
 	github.com/fatih/color v1.18.0 // indirect
 	github.com/fsnotify/fsnotify v1.10.1 // indirect
-	github.com/fxamacker/cbor/v2 v2.9.4 // indirect
+	github.com/fxamacker/cbor/v2 v2.10.0 // indirect
 	github.com/go-logr/zapr v1.3.0 // indirect
 	github.com/go-openapi/jsonpointer v1.0.2 // indirect
 	github.com/go-openapi/jsonreference v1.0.3 // indirect
