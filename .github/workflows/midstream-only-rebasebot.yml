@@ -1,0 +1,14 @@
+name: Sync main into latest RHOAI module release
+
+on:
+  schedule:
+    - cron: '0 10,14 * * 1-5'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  rebasebot:
+    uses: opendatahub-io/mcp-lifecycle-operator/.github/workflows/midstream-only-rebasebot.yml@main
